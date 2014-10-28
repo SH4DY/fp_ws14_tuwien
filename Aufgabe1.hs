@@ -48,25 +48,34 @@ myToString :: [Int] -> String
 myToString x = map intToDigit x
 
 --3. filterForFrequency
+
 filterForFrequency :: String -> Int -> [Char]
 filterForFrequency [] _ = ""
 filterForFrequency (x:xs) i = if countOccurence x (x:xs) == i then [x]++(filterForFrequency xs i) 
 	else filterForFrequency xs i 
+
+filterForFrequency' :: String -> Int -> [Char]
+filterForFrequency' [] _ = ""
+filterForFrequency' (x:xs) i =
+	if (countOccurence x (x:xs) == i) then [x]++(filterForFrequency' (filter(/= x) xs) i)
+	else filterForFrequency' (filter(/= x) xs) i 
 
 countOccurence :: Eq a => a -> [a] -> Int
 countOccurence _ [] = 0
 countOccurence b (a:as) | b == a = 1+(countOccurence b as)
                         | otherwise = countOccurence b as
 
---4. isPowerOfTwo
 
+--4. isPowerOfTwo
+--Zählt Vorkommen großer Vokale und kleiner Vokale. Bildet dann das Produkt
 isPowerOfTwo :: String -> Bool
 isPowerOfTwo x = isPowerOfTwoInBit((bigVocals x) * (smallVocals x))
 
+--Bitweises AND um herauszufinden ob  p = 2^k ist
 isPowerOfTwoInBit :: Int -> Bool
-isPowerOfTwoInBit b
-        | b == 0 || b == 1 = False
-        | (b .&. (b-1)) == 0 = True
+isPowerOfTwoInBit p
+        | p == 0 || p == 1 = False
+        | (p .&. (p-1)) == 0 = True
         | otherwise = False
 
 bigVocals :: String -> Int
