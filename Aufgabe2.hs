@@ -21,7 +21,10 @@ separateWords a = map words a
 --Liste von Wörtern filtern die b lang sind
 --Ausgabe der Länge der Liste
 numWordOcc :: Text -> Integer -> Integer
-numWordOcc a b = fromIntegral $ length $ filter (\x -> length x == (fromInteger b)) (removeDuplicates $ concat $ separateWords a)
+numWordOcc a b
+	| b < 1 = -1
+	| otherwise = fromIntegral $ length $ filter (\x -> length x == (fromInteger b)) (removeDuplicates $ concat $ separateWords a)
+
 
 removeDuplicates :: [String] -> [String]
 removeDuplicates = foldl (\seen x -> if x `elem` seen
