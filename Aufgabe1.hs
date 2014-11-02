@@ -48,17 +48,13 @@ myToString :: [Int] -> String
 myToString x = map intToDigit x
 
 --3. filterForFrequency
-
+--Zählt Vorkommen von Zeichen und löscht nach
+--erstmaligem Check alle Vorkommen
 filterForFrequency :: String -> Int -> [Char]
 filterForFrequency [] _ = ""
-filterForFrequency (x:xs) i = if countOccurence x (x:xs) == i then [x]++(filterForFrequency xs i) 
-	else filterForFrequency xs i 
-
-filterForFrequency' :: String -> Int -> [Char]
-filterForFrequency' [] _ = ""
-filterForFrequency' (x:xs) i =
-	if (countOccurence x (x:xs) == i) then [x]++(filterForFrequency' (filter(/= x) xs) i)
-	else filterForFrequency' (filter(/= x) xs) i 
+filterForFrequency (x:xs) i =
+	if (countOccurence x (x:xs) == i) then [x]++(filterForFrequency (filter(/= x) xs) i)
+	else filterForFrequency (filter(/= x) xs) i 
 
 countOccurence :: Eq a => a -> [a] -> Int
 countOccurence _ [] = 0
