@@ -4,6 +4,8 @@ import Data.List
 import Data.Tuple
 
 --maxWordLength
+--Erst werden die einzelnen Worte mittels der words Funktion getrennt
+--Dann wird über eine verflachte (concat) Liste gesucht
 type Line = String
 type Text = [Line]
 
@@ -32,6 +34,9 @@ removeDuplicates = foldl (\seen x -> if x `elem` seen
                                       else seen ++ [x]) []
 
 --reverseCheck
+--Es wird eine Liste von Tupeln gebildet (Zeile, UmgedrehteZeile)
+--Dann wird verglichen ob die Elemente der Tupel identisch sind und eine neue Liste erzeugt
+--Wenn mindestens 1 Element der neuen Liste True enthält, so gibt die Funktion True zurück
 reverseCheck::Text -> Bool
 reverseCheck a = True `elem` (map compareTuple . zip a $ map reverse a)
 
