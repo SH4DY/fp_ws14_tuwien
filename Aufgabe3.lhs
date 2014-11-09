@@ -16,8 +16,16 @@ Euromünzen
 1c,2c,5c,10c,20c,50c,1e,2e
 1,2,5,10,20,50,100,200
 
-minNumOfCoins :: Integer -> Integer
-minNumOfCoins n = asdfasdf
+Es wird eine Liste bestehend aus Tupeln generiert. Das Tupel besteht aus 
+dem Divisionwert der Münze mit dem Betrag und dem Rest nach der
+Division mit dem entsprechenden Münzwert.
+Das erste Tupel das passende Münzen enthält (>=1) wird entnommen. Die Funktion wird
+mit dem Divisionswert rekursiv aufgerufen. Die Anzahl der passenden Münzen wird in eine Liste
+gegeben die ebenfalls übergeben wird.
+> minNumOfCoins :: Integer -> Integer
+> minNumOfCoins n
+>    | n < 0 = -1
+>    | otherwise = toInteger $ coins (fromInteger n) []
 
 > euro = [200,100,50,20,10,5,2,1]
 
