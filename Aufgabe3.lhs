@@ -14,14 +14,14 @@ Falls keine Mehrfachnullfolge entdeckt wird, wird die Liste bis zum Ende durchla
 
 ___________________________________________
 numberOf :: Integer -> Integer
+Mittels replicateM werden alle Bitfolgen der Länge n erzeugt. Dann werden diese
+mit der zeroTest Funktion getestet. Die Länge der Ergebnisliste auf True gefiltert
+ist das Ergebnis.
 
 > numberOf :: Integer -> Integer
 > numberOf n
 >    | n == 0 = 0
 >    | n > 0 = toInteger $ length $ filter (\x -> x == True) $ map (zeroTest) (replicateM (fromInteger n) [0,1])
-
-
-cartProd xs ys = [(x,y) | x <- xs, y <- ys]
 
 __________________________________________
 Es wird eine Liste bestehend aus Tupeln generiert. Das Tupel besteht aus 
@@ -36,7 +36,7 @@ gegeben die ebenfalls übergeben wird.
 >    | n < 0 = -1
 >    | otherwise = toInteger $ coins (fromInteger n) []
 
-> euro = [200,100,50,20,10,5,2,1]
+> euro = [200,100,50,20,10,5,2,1] :: [Int]
 
 > coins :: Int -> [Int] -> Int
 > coins a l
@@ -44,10 +44,12 @@ gegeben die ebenfalls übergeben wird.
 >    | otherwise = coins (snd (head $ dropWhile (\(a,b) -> a < 1) (zipper a )))  (l ++ [(fst (head $ dropWhile (\(a,b) -> a < 1) (zipper a )))])
 
 > zipper :: Int -> [(Int, Int)]
-> zipper a = zip (map (a `div`) euro) (map (a `mod`) euro)
+> zipper a = zip (map (a `div`) euro) (map (a `rem`) euro)
 
 ________________________________________
 numOfSplits
+Doppelte Rekursion durch zippen der beiden generierten Listen. Lazy Entnahme
+der gewünschten Elemente.
 
 > numOfSplits :: Integer -> Integer
 > numOfSplits n
