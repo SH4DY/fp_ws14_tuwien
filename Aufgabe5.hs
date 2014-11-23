@@ -1,3 +1,6 @@
+--Ramon Lopez Narvaez
+--Aufgabe 5 - Funktionale auf algebraischen Datentypen
+
 data Tree = Node (Label -> Label) Label [Tree]
 type Label = Int
 
@@ -15,4 +18,20 @@ data STree = SNode Label [STree] deriving (Eq, Show)
 
 t2st :: Tree -> STree
 t2st (Node f l xs) = (SNode l (map t2st xs))
+
+tsum :: STree -> Label
+tsum (SNode l xs)
+    | xs == [] = l
+    | otherwise = sum (map tsum xs) + l
+
+tdepth :: STree -> Label
+tdepth tree
+    | (tdepth' tree) == 1 = 1
+    | otherwise = (tdepth' tree) -1
+
+tdepth' :: STree -> Label
+tdepth' (SNode l xs)
+    | xs == [] = 1
+    | otherwise = sum (map tdepth' xs) + 1
+
 
