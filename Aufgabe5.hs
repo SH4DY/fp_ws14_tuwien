@@ -40,7 +40,7 @@ tsum (SNode l xs)
 tdepth :: STree -> Label
 tdepth tree
     | (tdepth' tree) == 1 = 1
-    | otherwise = (tdepth'› tree) -1
+    | otherwise = (tdepth' tree) -1
 
 tdepth' :: STree -> Label
 tdepth' (SNode l xs)
