@@ -3,9 +3,10 @@
 
 import Data.List (maximumBy)
 import Data.Function (on)
+import Numeric
 
 --DEF
-data Nat = Z | S Nat deriving Show
+data Nat = Z | S Nat deriving (Show)
 
 instance Eq Nat where
  (==) Z Z         = True
@@ -52,12 +53,12 @@ instance Num Nat where
 type PosRat = (Nat, Nat)
 type Skalar = PosRat
 type ProtoMatrix = [[Skalar]]
-newtype Matrix = M [[Skalar]] deriving Show
+newtype Matrix = M [[Skalar]]
 type Fuellwert = Integer
 
--- pm = [[1,2,3],[4,5,6]]
 
 
+--Aufgabe 6.1
 mkMatrix :: ProtoMatrix -> Fuellwert -> Matrix
 mkMatrix pm i = M [fill x maxi (intToPosRat (fromIntegral i))|x <- pm]
 	where
@@ -69,15 +70,45 @@ fill (x:xs) m fuell
     | otherwise = fill ((x:xs) ++ [fuell]) m fuell
 
 intToPosRat :: Int -> PosRat
-intToPosRat x = (natFromInteger x, natFromInteger 1)
+intToPosRat x 
+    | x == 0 = (Z, Z)
+    | otherwise = (natFromInteger x, natFromInteger 1)
 
 natFromInteger :: Int -> Nat
 natFromInteger x
   | x <= 0       = Z
   | otherwise    = sum (replicate (fromIntegral x) (S Z))
 
+--Aufgabe6.2
+data OktoZiffern = E | Zw | D | V | F | Se | Si | N
+type OktoZahlen = [OktoZiffern]
+
+
+--instance Show Matrix where
+--	show (M x) = ()
+
+--posRatToOct :: PosRat -> String
+--posRatToOct (x,y) = "(" ++ (showOct x "") ++ "/" ++ (showOct y "") ++ ")"
+
+--Aufgabe3
+
+instance Eq Matrix where
+	(==) (M m1) (M m2) = (length m1) == (length m2) && (all (\x -> length x == dim) m1) && (all (\x -> length x == dim) m2) && (all (\(x,y) -> x==y)(zip m1 m2))
+		where dim = (length (m1 !! 1))
+
+
+
+
+
+
+--Testdaten
+
 a1 = S (S Z)
 a2 = S (S (S Z))
 posRat = (a2,a1)
+posRat2 = (a1, a2)
 
 proto = [[posRat, posRat],[posRat,posRat,posRat],[posRat]]
+
+mat1 = M [[posRat, posRat2],[posRat,posRat],[posRat, posRat]]
+mat2 = M [[],[posRat,posRat],[posRat, posRat]]
