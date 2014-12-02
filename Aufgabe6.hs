@@ -104,26 +104,27 @@ class (Eq a) => OrdMat a where
     cmpm :: a -> a -> OrderingMat
 
 instance OrdMat Matrix where
-    lsm x y = False
-    lem x y = False
-    grm x y = False
-    gem x y = False
+    lsm (M m1) (M m2) = (compareDim (M m1) (M m2)) && (all (\(x,y) -> x < y)(zip m1 m2))
+    lem (M m1) (M m2) = (compareDim (M m1) (M m2)) && (all (\(x,y) -> x <= y)(zip m1 m2))
+    grm (M m1) (M m2) = (compareDim (M m1) (M m2)) && (all (\(x,y) -> x > y)(zip m1 m2))
+    gem (M m1) (M m2) = (compareDim (M m1) (M m2)) && (all (\(x,y) -> x >= y)(zip m1 m2))
     cmpm x y
         | x == y = EQM
         | lsm x y = LTM
         | grm x y = GTM
         | otherwise = INC
 
-
+compareDim :: Matrix -> Matrix -> Bool
+compareDim (M m1) (M m2) = (length m1) == (length m2) && (all (\x -> length x == dim) m1) && (all (\x -> length x == dim) m2)
+    where dim = (length (m1 !! 1))
 
 --Testdaten
-
 a1 = S (S Z)
 a2 = S (S (S Z))
-posRat = (a2,a1)
-posRat2 = (a1, a2)
+posRat = (a2,a1) --1,5
+posRat2 = (a1, a2) --0,6
 
 proto = [[posRat, posRat],[posRat,posRat,posRat],[posRat]]
 
-mat1 = M [[posRat, posRat2],[posRat,posRat],[posRat, posRat]]
-mat2 = M [[posRat, posRat2],[posRat,posRat],[posRat, posRat]]
+mat1 = M [[posRat, posRat],[posRat,posRat],[posRat, posRat]]
+mat2 = M [[posRat2, posRat2],[posRat2,posRat2],[posRat2, posRat2]]
