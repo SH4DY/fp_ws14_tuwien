@@ -93,11 +93,26 @@ type OktoZahlen = [OktoZiffern]
 --Aufgabe3
 
 instance Eq Matrix where
-	(==) (M m1) (M m2) = (length m1) == (length m2) && (all (\x -> length x == dim) m1) && (all (\x -> length x == dim) m2) && (all (\(x,y) -> x==y)(zip m1 m2))
-		where dim = (length (m1 !! 1))
+    (==) (M m1) (M m2) = (length m1) == (length m2) && (all (\x -> length x == dim) m1) && (all (\x -> length x == dim) m2) && (all (\(x,y) -> x==y)(zip m1 m2))
+	    where dim = (length (m1 !! 1))
 
+--Aufgabe4
+data OrderingMat = EQM | LTM | GTM | INC deriving (Eq, Show)
 
+class (Eq a) => OrdMat a where
+    lsm, lem, grm, gem :: a -> a -> Bool
+    cmpm :: a -> a -> OrderingMat
 
+instance OrdMat Matrix where
+    lsm x y = False
+    lem x y = False
+    grm x y = False
+    gem x y = False
+    cmpm x y
+        | x == y = EQM
+        | lsm x y = LTM
+        | grm x y = GTM
+        | otherwise = INC
 
 
 
@@ -111,4 +126,4 @@ posRat2 = (a1, a2)
 proto = [[posRat, posRat],[posRat,posRat,posRat],[posRat]]
 
 mat1 = M [[posRat, posRat2],[posRat,posRat],[posRat, posRat]]
-mat2 = M [[],[posRat,posRat],[posRat, posRat]]
+mat2 = M [[posRat, posRat2],[posRat,posRat],[posRat, posRat]]
