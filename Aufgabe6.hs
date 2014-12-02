@@ -47,6 +47,7 @@ instance Num Nat where
  fromInteger x
   | x <= 0       = Z
   | otherwise    = sum (replicate (fromIntegral x) (S Z))
+
 --END DEF
 
 --data Nat = Z | S Nat deriving (Eq, Ord, Show)
@@ -80,15 +81,34 @@ natFromInteger x
   | otherwise    = sum (replicate (fromIntegral x) (S Z))
 
 --Aufgabe6.2
-data OktoZiffern = E | Zw | D | V | F | Se | Si | N
+data OktoZiffern = E | Zw | D | V | F | Se | Si | N deriving Show
 type OktoZahlen = [OktoZiffern]
 
 
---instance Show Matrix where
---	show (M x) = ()
+instance Show Matrix where
+	show (M x) = show $ map(map(posRatToOct)) x
 
---posRatToOct :: PosRat -> String
---posRatToOct (x,y) = "(" ++ (showOct x "") ++ "/" ++ (showOct y "") ++ ")"
+toOkto :: String -> OktoZahlen
+toOkto (x:xs) 
+    | x == '1' = [E] ++ toOkto xs
+    | x == '2' = [Zw] ++ toOkto xs
+    | x == '3' = [D] ++ toOkto xs
+    | x == '4' = [V] ++ toOkto xs
+    | x == '5' = [F] ++ toOkto xs
+    | x == '6' = [Se] ++ toOkto xs
+    | x == '7' = [Si] ++ toOkto xs
+    | x == '0' = [N] ++ toOkto xs
+toOkto [] = []
+
+posRatToOct :: PosRat -> [OktoZahlen]
+posRatToOct (x,y) = [(toOkto (showOct (natToInt x) "")) ++ (toOkto (showOct (natToInt y) ""))]
+
+natToInt :: Nat -> Int
+natToInt (S x) = natToInt x + 1
+natToInt Z = 0 
+
+bla (x:xs)
+    | xs == "" = "Tight"
 
 --Aufgabe3
 
@@ -118,13 +138,25 @@ compareDim :: Matrix -> Matrix -> Bool
 compareDim (M m1) (M m2) = (length m1) == (length m2) && (all (\x -> length x == dim) m1) && (all (\x -> length x == dim) m2)
     where dim = (length (m1 !! 1))
 
+--Aufgabe5
+class (Eq a) => ArithMat a where
+    addm, multm :: a -> a -> a
+
+instance ArithMat Matrix where
+	addm (M m1)(M m2)
+	    | compareDim (M m1)(M m2) == False = M [[(Z,Z)]]
+	    | otherwise = M [[(Z,Z)]]
+
 --Testdaten
 a1 = S (S Z)
-a2 = S (S (S Z))
-posRat = (a2,a1) --1,5
+a2 = S(S(S(S (S (S ( S( S( S( S Z)))))))))
+posRat = (a2,a2) --1,5
 posRat2 = (a1, a2) --0,6
 
 proto = [[posRat, posRat],[posRat,posRat,posRat],[posRat]]
+
+skalar1 = [[posRat],[posRat],[posRat]]
+skalar2 = [[posRat2],[posRat2],[posRat2]]
 
 mat1 = M [[posRat, posRat],[posRat,posRat],[posRat, posRat]]
 mat2 = M [[posRat2, posRat2],[posRat2,posRat2],[posRat2, posRat2]]
