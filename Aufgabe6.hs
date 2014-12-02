@@ -1,11 +1,12 @@
 --Ramon Lopez
 --Aufgabe 6
 
-import Data.List (maximumBy)
-import Data.Function (on)
+import Data.List
+import Data.Ord
 import Numeric
 
 --DEF
+--Defintion der Datentypen
 data Nat = Z | S Nat deriving (Show)
 
 instance Eq Nat where
@@ -60,10 +61,11 @@ type Fuellwert = Integer
 
 
 --Aufgabe 6.1
+--Auffüllen der Matrix mittels Listdurchgang
 mkMatrix :: ProtoMatrix -> Fuellwert -> Matrix
 mkMatrix pm i = M [fill x maxi (intToPosRat (fromIntegral i))|x <- pm]
 	where
-		maxi = length $ maximumBy (compare `on` length)  pm
+		maxi = length $ maximumBy (comparing length)  pm
 
 fill :: [Skalar] -> Int -> Skalar -> [Skalar]
 fill (x:xs) m fuell
@@ -81,6 +83,7 @@ natFromInteger x
   | otherwise    = sum (replicate (fromIntegral x) (S Z))
 
 --Aufgabe6.2
+--Umwandlung in Oktal mittels Listen (keine Tupel mehr)
 data OktoZiffern = E | Zw | D | V | F | Se | Si | N deriving Show
 type OktoZahlen = [OktoZiffern]
 
@@ -111,7 +114,7 @@ bla (x:xs)
     | xs == "" = "Tight"
 
 --Aufgabe3
-
+--Vergleich der Dimensionen ausgelagert, dann Vergleich mittels überladenen Operatoren
 instance Eq Matrix where
     (==) (M m1) (M m2) = (length m1) == (length m2) && (all (\x -> length x == dim) m1) && (all (\x -> length x == dim) m2) && (all (\(x,y) -> x==y)(zip m1 m2))
 	    where dim = (length (m1 !! 1))
@@ -146,6 +149,8 @@ instance ArithMat Matrix where
 	addm (M m1)(M m2)
 	    | compareDim (M m1)(M m2) == False = M [[(Z,Z)]]
 	    | otherwise = M [[(Z,Z)]]
+	multm (M m1)(M m2) = M [[(Z,Z)]]
+
 
 --Testdaten
 a1 = S (S Z)
