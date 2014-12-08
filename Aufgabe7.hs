@@ -19,11 +19,37 @@ type Historie = [Saison]
 
 --Welche Spieler sind mit den meisten Vereinen Meister geworden?
 get_spm :: Historie -> [SpielerId]
-get_spm [(p, k, t)] = []
+get_spm seasons =  orderByAppearence $ concat $ map (\ve -> remDup $ concat $ (map (\sa -> was_champ_season ve sa) seasons)) vereine
+
+--removeDup $ concat (\sa -> map (was_champ_season ve sa) seasons )
+--get_mdhm :: Historie -> [Verein]
 
 --Helper
 get_meister :: Saison -> Verein
 get_meister (p, k, t) = fst $ last (sortBy (comparing snd) (map (\x -> (x, p x)) vereine)) 
+
+
+was_champ_season:: Verein -> Saison -> [SpielerId]
+was_champ_season v (p,Kd f,t)
+    | (get_meister (p,Kd f,t)) == v = f v
+    | otherwise = []
+
+remDup = foldl (\seen x -> if x `elem` seen
+                                      then seen
+                                      else seen ++ [x]) []
+orderByAppearence :: [SpielerId] -> [SpielerId]
+orderByAppearence (a:as) = map (\(x,y) -> y) (takeWhile (\(x,y) -> (fst $ head (frequency (a:as))) == x) (frequency (a:as)))
+
+frequency :: Ord a => [a] -> [(Int,a)] 
+frequency list = listRevFast $ sortBy (comparing fst) (map (\l -> (length l, head l)) (group (sort list)))
+
+listRevFast :: [a] -> [a]
+listRevFast l = _listRevFast l []
+    where
+        _listRevFast :: [a] -> [a] -> [a]
+        _listRevFast [] l = l
+        _listRevFast (x:xs) l = _listRevFast xs (x:l)
+
 --Testdaten
 
 vereine = [Sturm,WAC,Austria,WrNeustadt,RBSbg,Groedig,Rapid,Admira,Ried,Altach]
@@ -31,11 +57,13 @@ a1 = S (S Z)
 a2 = S(S(S(S (S (S ( S( S( S( S Z)))))))))
 a3 = S(S(S (S Z)))
 a4 = S(S(S(S(S(S(S (S (S ( S( S( S( S Z))))))))))))
+a5 = S( S (S Z))
 
 spieler1 = SId a1
 spieler2 = SId a2
 spieler3 = SId a3
 spieler4 = SId a4
+spieler5 = SId a5
 
 trainer1 = Tr (get_trainer1)
 trainer2 = Tr (get_trainer2)
@@ -51,13 +79,13 @@ historie1 = [saison_1, saison_2]
 
 get_kader1 :: Verein -> [SpielerId]
 get_kader1 v
-    | v == Sturm = [spieler1, spieler2]
+    | v == Sturm = [spieler1, spieler2,spieler5]
     | v == Austria = [spieler3, spieler4]
 
 get_kader2 :: Verein -> [SpielerId]
 get_kader2 v
     | v == Sturm = [spieler1, spieler2]
-    | v == Austria = [spieler3, spieler4]
+    | v == Austria = [spieler1, spieler4, spieler5]
 
 --Return Trainer
 get_trainer1 :: Verein -> TrainerId
