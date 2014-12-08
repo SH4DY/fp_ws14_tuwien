@@ -110,8 +110,6 @@ natToInt :: Nat -> Int
 natToInt (S x) = natToInt x + 1
 natToInt Z = 0 
 
-bla (x:xs)
-    | xs == "" = "Tight"
 
 --Aufgabe3
 --Vergleich der Dimensionen ausgelagert, dann Vergleich mittels überladenen Operatoren
