@@ -4,7 +4,23 @@ import Data.Ord
 
 data Verein = Sturm|WAC|Austria|WrNeustadt|RBSbg|Groedig|Rapid|Admira|Ried|Altach deriving (Eq, Ord, Show)
 
-newtype SpielerId = SId Nat deriving (Eq, Ord, Show)
+newtype SpielerId = SId Nat deriving (Eq, Show)
+instance Ord SpielerId where
+	(<) (SId Z) (SId Z) = False
+	(<) (SId x) (SId y) = (x < y)
+	--(<) (SId Z) _ = True
+	--(<) _ (SId Z) = False
+	compare (SId Z) (SId Z) = EQ
+	compare (SId Z) (SId x) = LT
+	compare (SId x) (SId Z) = GT
+	compare (SId x) (SId y) = compare x y
+	max x y
+	    | x > y            = x
+	    | otherwise        = y
+	min x y
+	    | x < y            = x
+	    | otherwise        = y
+
 newtype TrainerId = TId Nat deriving (Eq, Ord, Show)
 
 newtype Kader = Kd (Verein -> [SpielerId])
@@ -17,17 +33,23 @@ type Saison = (Punkte, Kader, Trainer)
 type Historie = [Saison]
 
 
---Welche Spieler sind mit den meisten Vereinen Meister geworden?
+--1. Welche Spieler sind mit den meisten Vereinen Meister geworden?
 get_spm :: Historie -> [SpielerId]
-get_spm seasons =  orderByAppearence $ concat $ map (\ve -> remDup $ concat $ (map (\sa -> was_champ_season ve sa) seasons)) vereine
+get_spm seasons =  sort $ orderByAppearence $ concat $ map (\ve -> remDup $ concat $ (map (\sa -> was_champ_season ve sa) seasons)) vereine
 
---removeDup $ concat (\sa -> map (was_champ_season ve sa) seasons )
---get_mdhm :: Historie -> [Verein]
+--2. Welche Vereine haben die Saison am häufigsten auf einem Primzahltabellenplatz abgeschlossen
+get_mdhm :: Historie -> [Verein]
+get_mdhm hist = sort $ map (fst) $ takeWhile (\(v,p) -> p >= (snd(head allRanks))) allRanks
+    where allRanks = listRevFast $ sortBy (comparing snd) $ map (\v -> (v, countRanks hist v)) vereine
+--get_mdhm x = map (countRanks) x
+
+--Map über alle Vereine
+--Verein x, map über alle saisonen
+--in saison auf mdhm Platz abgeschlossen? +1
 
 --Helper
 get_meister :: Saison -> Verein
 get_meister (p, k, t) = fst $ last (sortBy (comparing snd) (map (\x -> (x, p x)) vereine)) 
-
 
 was_champ_season:: Verein -> Saison -> [SpielerId]
 was_champ_season v (p,Kd f,t)
@@ -43,6 +65,7 @@ orderByAppearence (a:as) = map (\(x,y) -> y) (takeWhile (\(x,y) -> (fst $ head (
 frequency :: Ord a => [a] -> [(Int,a)] 
 frequency list = listRevFast $ sortBy (comparing fst) (map (\l -> (length l, head l)) (group (sort list)))
 
+--Schnelles Umkehren von Listen
 listRevFast :: [a] -> [a]
 listRevFast l = _listRevFast l []
     where
@@ -50,8 +73,31 @@ listRevFast l = _listRevFast l []
         _listRevFast [] l = l
         _listRevFast (x:xs) l = _listRevFast xs (x:l)
 
---Testdaten
+--ACHTUNG 0 Indexierung
+get_season_rank :: Saison -> Verein -> Maybe Int
+get_season_rank s v = elemIndex v (get_season_rankings s) 
 
+get_season_rankings::Saison -> [Verein]
+get_season_rankings (p,k,t) = listRevFast $ map (fst) $ sortBy (comparing snd) $ map (\team -> (team, p team)) vereine
+
+--map (countRanks) vereine 
+countRanks :: Historie -> Verein -> Int
+countRanks h v = sum $ map (\s -> if (isMdhm $ get_season_rank s v) then 1 else 0) h
+
+-- +1 weil ein Wert mit 0 Indexierung reinkommt
+isMdhm :: Maybe Int -> Bool
+isMdhm Nothing = False
+isMdhm (Just x)
+    | not(rank == 0) && not(rank==1) && (isPrime rank) = True
+    | otherwise = False
+    where rank = x+1
+
+
+isPrime x = not $ any divisible $ takeWhile notTooBig [2..] where
+     divisible y = x `mod`y == 0
+     notTooBig y = y*y <= x
+
+--Testdaten
 vereine = [Sturm,WAC,Austria,WrNeustadt,RBSbg,Groedig,Rapid,Admira,Ried,Altach]
 a1 = S (S Z)
 a2 = S(S(S(S (S (S ( S( S( S( S Z)))))))))
@@ -75,6 +121,7 @@ saison_1 = (get_punkte_s1, kader1, trainer1)
 saison_2 = (get_punkte_s2, kader2, trainer2)
 
 historie1 = [saison_1, saison_2]
+historie2 = [saison_2, saison_1]
 --Return Kader
 
 get_kader1 :: Verein -> [SpielerId]
