@@ -41,16 +41,26 @@ get_spm seasons =  sort $ orderByAppearence $ concat $ map (\ve -> remDup $ conc
 --2. Welche Vereine haben die Saison am häufigsten auf einem Primzahltabellenplatz abgeschlossen
 get_mdhm :: Historie -> [Verein]
 get_mdhm hist = sort $ map (fst) $ takeWhile (\(v,p) -> p >= (snd(head allRanks))) allRanks
-    where allRanks = listRevFast $ sortBy (comparing snd) $ map (\v -> (v, countRanksM hist v)) vereine
+    where allRanks = reverse $ sortBy (comparing snd) $ map (\v -> (v, countRanksM hist v)) vereine
 
 --3. Welche Vereine haben die Saison am häufigsten auf einem Potenz-von-2 Tabellenplatz abgeschlossen?
 get_mdhi :: Historie -> [Verein]
 get_mdhi hist = sort $ map (fst) $ takeWhile (\(v,p) -> p >= (snd(head allRanks))) allRanks
-    where allRanks = listRevFast $ sortBy (comparing snd) $ map (\v -> (v, countRanksI hist v)) vereine
+    where allRanks = reverse $ sortBy (comparing snd) $ map (\v -> (v, countRanksI hist v)) vereine
 
---Map über alle Vereine
---Verein x, map über alle saisonen
---in saison auf mdhm Platz abgeschlossen? +1
+--4. Welche Spieler sind am häufigsten Vizemeister geworden, ohne je Meister geworden zu sein?
+get_pv :: Historie -> [SpielerId]
+get_pv h = sort $ filter (\p -> not(elem p champs)) vices
+	where vices = sort $ orderByAppearence $ concat $ map (\v -> concat $ (map (\s -> was_vice_season v s) h)) vereine
+	      champs = concat $ map (\v -> concat $ (map (\s -> was_champ_season v s) h)) vereine
+--Map über alle Vereine alle saisonen
+--verein x wurde in saison y vizemeister?
+--füge alle spieler von verein x in liste ein
+-- ==> Liste mit allen Spielern die je Vize geworden sind
+-- Zählen welcher Spieler am häufigsten in der Liste vorkommt (evt. auch mehrere)
+
+
+--6. Welche Trainer haben am h¨aufigsten Vereine am Ende der Saison auf einen Stockerlplatz gefuhrt? 
 
 --Helper
 get_meister :: Saison -> Verein
@@ -61,30 +71,31 @@ was_champ_season v (p,Kd f,t)
     | (get_meister (p,Kd f,t)) == v = f v
     | otherwise = []
 
+get_vice :: Saison -> Verein
+get_vice (p, k, t) = fst $ (xs !! 1)
+    where xs = reverse $ (sortBy (comparing snd) (map (\x -> (x, p x)) vereine)) 
+
+was_vice_season:: Verein -> Saison -> [SpielerId]
+was_vice_season v (p,Kd f,t)
+    | (get_vice (p,Kd f,t)) == v = f v
+    | otherwise = []
+
 remDup = foldl (\seen x -> if x `elem` seen
                                       then seen
                                       else seen ++ [x]) []
 orderByAppearence :: [SpielerId] -> [SpielerId]
 orderByAppearence (a:as) = map (\(x,y) -> y) (takeWhile (\(x,y) -> (fst $ head (frequency (a:as))) == x) (frequency (a:as)))
 
---Häufigkeit des Vorkommens eines Elements (Rückgabe als Tupel)
+--Häufigkeit des Vorkommens eines Elements (Rückgabe als Tupel), absteigend sortiert
 frequency :: Ord a => [a] -> [(Int,a)] 
-frequency list = listRevFast $ sortBy (comparing fst) (map (\l -> (length l, head l)) (group (sort list)))
-
---Schnelles Umkehren von Listen
-listRevFast :: [a] -> [a]
-listRevFast l = _listRevFast l []
-    where
-        _listRevFast :: [a] -> [a] -> [a]
-        _listRevFast [] l = l
-        _listRevFast (x:xs) l = _listRevFast xs (x:l)
+frequency list = reverse $ sortBy (comparing fst) (map (\l -> (length l, head l)) (group (sort list)))
 
 --ACHTUNG 0 Indexierung
 get_season_rank :: Saison -> Verein -> Maybe Int
 get_season_rank s v = elemIndex v (get_season_rankings s) 
 
 get_season_rankings::Saison -> [Verein]
-get_season_rankings (p,k,t) = listRevFast $ map (fst) $ sortBy (comparing snd) $ map (\team -> (team, p team)) vereine
+get_season_rankings (p,k,t) = reverse $ map (fst) $ sortBy (comparing snd) $ map (\team -> (team, p team)) vereine
 
 -- Zählt "Mathematiker-Ränge"
 countRanksM :: Historie -> Verein -> Int
@@ -112,6 +123,12 @@ isPow2 p
         | p == 0 || p == 1 = False
         | (p .&. (p-1)) == 0 = True
         | otherwise = False
+
+remove_player :: Eq a => a -> [a] -> [a]
+remove_player _ [] = []
+remove_player x (y:ys)
+    | x == y = remove_player x ys
+    | otherwise = y : remove_player x ys
 
 --Testdaten
 vereine = [Sturm,WAC,Austria,WrNeustadt,RBSbg,Groedig,Rapid,Admira,Ried,Altach]
@@ -142,13 +159,13 @@ historie2 = [saison_2, saison_1]
 
 get_kader1 :: Verein -> [SpielerId]
 get_kader1 v
-    | v == Sturm = [spieler1, spieler2,spieler5]
-    | v == Austria = [spieler3, spieler4]
+    | v == Sturm = [spieler1, spieler2]
+    | v == Austria = [spieler3, spieler4, spieler5]
 
 get_kader2 :: Verein -> [SpielerId]
 get_kader2 v
     | v == Sturm = [spieler1, spieler2]
-    | v == Austria = [spieler1, spieler4, spieler5]
+    | v == Austria = [spieler3, spieler4]
 
 --Return Trainer
 get_trainer1 :: Verein -> TrainerId
