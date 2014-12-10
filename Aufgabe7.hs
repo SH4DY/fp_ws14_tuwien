@@ -50,7 +50,7 @@ get_mdhi hist = sort $ map (fst) $ takeWhile (\(v,p) -> p >= (snd(head allRanks)
 
 --4. Welche Spieler sind am häufigsten Vizemeister geworden, ohne je Meister geworden zu sein?
 get_pv :: Historie -> [SpielerId]
-get_pv h = sort $ filter (\p -> not(elem p champs)) vices
+get_pv h = reverse $ sort $ filter (\p -> not(elem p champs)) vices
 	where vices = sort $ orderByAppearence $ concat $ map (\v -> concat $ (map (\s -> was_vice_season v s) h)) vereine
 	      champs = concat $ map (\v -> concat $ (map (\s -> was_champ_season v s) h)) vereine
 --Map über alle Vereine alle saisonen
@@ -59,6 +59,9 @@ get_pv h = sort $ filter (\p -> not(elem p champs)) vices
 -- ==> Liste mit allen Spielern die je Vize geworden sind
 -- Zählen welcher Spieler am häufigsten in der Liste vorkommt (evt. auch mehrere)
 
+--5. Welche Vereine mit diesem Spieler im Kader haben die Spielzeit am häufigstens auf dem letzten Tabellenplatz beendet?
+get_ugr :: Historie -> [SpielerId]
+get_ugr x = []
 
 --6. Welche Trainer haben am h¨aufigsten Vereine am Ende der Saison auf einen Stockerlplatz gefuhrt? 
 
@@ -160,12 +163,12 @@ historie2 = [saison_2, saison_1]
 get_kader1 :: Verein -> [SpielerId]
 get_kader1 v
     | v == Sturm = [spieler1, spieler2]
-    | v == Austria = [spieler3, spieler4, spieler5]
+    | v == Austria = [spieler3, spieler4]
 
 get_kader2 :: Verein -> [SpielerId]
 get_kader2 v
     | v == Sturm = [spieler1, spieler2]
-    | v == Austria = [spieler3, spieler4]
+    | v == Austria = [spieler3]
 
 --Return Trainer
 get_trainer1 :: Verein -> TrainerId
@@ -192,6 +195,13 @@ get_punkte_s2 v
     | v == Sturm = a1
     | v == Austria = a2
     | otherwise = Z
+
+get_punkte_s3 :: Verein -> Nat
+get_punkte_s3 v
+    | v == Sturm = a2
+    | v == Austria = a1
+    | otherwise = Z
+
 --Defintion der Datentypen
 data Nat = Z | S Nat deriving (Show)
 
