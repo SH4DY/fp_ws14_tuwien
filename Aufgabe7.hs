@@ -1,6 +1,7 @@
 --Aufgabenblatt 7
 import Data.List
 import Data.Ord
+import Data.Bits
 
 data Verein = Sturm|WAC|Austria|WrNeustadt|RBSbg|Groedig|Rapid|Admira|Ried|Altach deriving (Eq, Ord, Show)
 
@@ -40,8 +41,12 @@ get_spm seasons =  sort $ orderByAppearence $ concat $ map (\ve -> remDup $ conc
 --2. Welche Vereine haben die Saison am häufigsten auf einem Primzahltabellenplatz abgeschlossen
 get_mdhm :: Historie -> [Verein]
 get_mdhm hist = sort $ map (fst) $ takeWhile (\(v,p) -> p >= (snd(head allRanks))) allRanks
-    where allRanks = listRevFast $ sortBy (comparing snd) $ map (\v -> (v, countRanks hist v)) vereine
---get_mdhm x = map (countRanks) x
+    where allRanks = listRevFast $ sortBy (comparing snd) $ map (\v -> (v, countRanksM hist v)) vereine
+
+--3. Welche Vereine haben die Saison am häufigsten auf einem Potenz-von-2 Tabellenplatz abgeschlossen?
+get_mdhi :: Historie -> [Verein]
+get_mdhi hist = sort $ map (fst) $ takeWhile (\(v,p) -> p >= (snd(head allRanks))) allRanks
+    where allRanks = listRevFast $ sortBy (comparing snd) $ map (\v -> (v, countRanksI hist v)) vereine
 
 --Map über alle Vereine
 --Verein x, map über alle saisonen
@@ -62,6 +67,7 @@ remDup = foldl (\seen x -> if x `elem` seen
 orderByAppearence :: [SpielerId] -> [SpielerId]
 orderByAppearence (a:as) = map (\(x,y) -> y) (takeWhile (\(x,y) -> (fst $ head (frequency (a:as))) == x) (frequency (a:as)))
 
+--Häufigkeit des Vorkommens eines Elements (Rückgabe als Tupel)
 frequency :: Ord a => [a] -> [(Int,a)] 
 frequency list = listRevFast $ sortBy (comparing fst) (map (\l -> (length l, head l)) (group (sort list)))
 
@@ -80,22 +86,32 @@ get_season_rank s v = elemIndex v (get_season_rankings s)
 get_season_rankings::Saison -> [Verein]
 get_season_rankings (p,k,t) = listRevFast $ map (fst) $ sortBy (comparing snd) $ map (\team -> (team, p team)) vereine
 
---map (countRanks) vereine 
-countRanks :: Historie -> Verein -> Int
-countRanks h v = sum $ map (\s -> if (isMdhm $ get_season_rank s v) then 1 else 0) h
+-- Zählt "Mathematiker-Ränge"
+countRanksM :: Historie -> Verein -> Int
+countRanksM h v = sum $ map (\s -> if (isMdh isPrime $ get_season_rank s v) then 1 else 0) h
+
+--Zählt "Informatiker-Ränge"
+countRanksI :: Historie -> Verein -> Int
+countRanksI h v = sum $ map (\s -> if (isMdh isPow2 $ get_season_rank s v) then 1 else 0) h
 
 -- +1 weil ein Wert mit 0 Indexierung reinkommt
-isMdhm :: Maybe Int -> Bool
-isMdhm Nothing = False
-isMdhm (Just x)
-    | not(rank == 0) && not(rank==1) && (isPrime rank) = True
+isMdh :: (Int->Bool) -> Maybe Int -> Bool
+isMdh _ Nothing= False
+isMdh foo (Just x)
+    | not(rank == 0) && not(rank==1) && (foo rank) = True
     | otherwise = False
     where rank = x+1
 
-
+isPrime :: Int ->Bool
 isPrime x = not $ any divisible $ takeWhile notTooBig [2..] where
      divisible y = x `mod`y == 0
      notTooBig y = y*y <= x
+
+isPow2 :: Int -> Bool
+isPow2 p
+        | p == 0 || p == 1 = False
+        | (p .&. (p-1)) == 0 = True
+        | otherwise = False
 
 --Testdaten
 vereine = [Sturm,WAC,Austria,WrNeustadt,RBSbg,Groedig,Rapid,Admira,Ried,Altach]
