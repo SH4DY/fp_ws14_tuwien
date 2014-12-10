@@ -64,8 +64,10 @@ get_ugr :: Historie -> [SpielerId]
 get_ugr h = reverse $ lasts
     where lasts = sort $ orderByAppearence $ concat $ map (\v -> concat $ (map (\s -> was_last_season v s) h)) vereine
 
---6. Welche Trainer haben am h¨aufigsten Vereine am Ende der Saison auf einen Stockerlplatz gefuhrt? 
-
+--6. Welche Trainer haben am häufigsten Vereine am Ende der Saison auf einen Stockerlplatz gefuhrt? 
+get_tsp :: Historie -> [TrainerId]
+get_tsp h = stockerl
+    where stockerl = sort $ orderByAppearenceT $ concat $ map (\v -> filter (\x -> not(x==TId Z)) (map (\s -> was_stockerl_season v s) h)) vereine
 --Helper
 get_meister :: Saison -> Verein
 get_meister (p, k, t) = fst $ last (sortBy (comparing snd) (map (\x -> (x, p x)) vereine)) 
@@ -93,6 +95,17 @@ was_last_season v (p,Kd f,t)
     | (get_last (p,Kd f,t)) == v = f v
     | otherwise = []
 
+get_placement ::  Saison -> Int -> Verein
+get_placement (p,k,t) place
+    | place == 1 = get_meister (p,k,t)
+    | place > 1 && place <= 10 = fst $ (xs !! (place-1))
+    where xs = reverse $ (sortBy (comparing snd) (map (\x -> (x,p x)) vereine)) 
+
+was_stockerl_season :: Verein -> Saison -> TrainerId
+was_stockerl_season v (p,k,Tr f)
+    | ((get_placement (p,k,Tr f) 1) == v) || ((get_placement (p,k,Tr f) 2) == v) || ((get_placement (p,k,Tr f) 3) == v) = f v
+    | otherwise = TId Z
+
 
 remDup = foldl (\seen x -> if x `elem` seen
                                       then seen
@@ -100,6 +113,11 @@ remDup = foldl (\seen x -> if x `elem` seen
 orderByAppearence :: [SpielerId] -> [SpielerId]
 orderByAppearence [] = []
 orderByAppearence (a:as) = map (\(x,y) -> y) (takeWhile (\(x,y) -> (fst $ head (frequency (a:as))) == x) (frequency (a:as)))
+
+orderByAppearenceT :: [TrainerId] -> [TrainerId]
+orderByAppearenceT [] = []
+orderByAppearenceT (a:as) = map (\(x,y) -> y) (takeWhile (\(x,y) -> (fst $ head (freq)) == x) freq)
+    where freq = frequency (a:as)
 
 --Häufigkeit des Vorkommens eines Elements (Rückgabe als Tupel), absteigend sortiert
 frequency :: Ord a => [a] -> [(Int,a)] 
@@ -153,6 +171,10 @@ a3 = S(S(S (S Z)))
 a4 = S(S(S(S(S(S(S (S (S ( S( S( S( S Z))))))))))))
 a5 = S( S (S Z))
 a6 = S Z
+a7 = S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S (S (S ( S( S( S( S Z))))))))))))))))))))))))
+a8 = S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S (S (S ( S( S( S( S Z))))))))))))))))))))))))
+a9 = S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S (S (S ( S( S( S( S Z))))))))))))))))))))))))
+a10 = S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S (S (S ( S( S( S( S Z))))))))))))))))))))))))
 
 spieler1 = SId a1
 spieler2 = SId a2
@@ -193,19 +215,35 @@ get_trainer1 :: Verein -> TrainerId
 get_trainer1 v
     | v == Sturm = TId a1
     | v == Austria = TId a2
+    | v == Ried = TId a3
+    | v == WAC = TId a4
+    | v == Rapid = TId a5
+    | v == RBSbg = TId a6
+    | v == Admira = TId a7
+    | v == Altach = TId a8
+    | v == WrNeustadt = TId a9
+    | v == Groedig = TId a10
     | otherwise = TId Z
 
 get_trainer2 :: Verein -> TrainerId
 get_trainer2 v
-    | v == Sturm = TId a2
-    | v == Austria = TId a1
+    | v == Sturm = TId a1
+    | v == Austria = TId a2
+    | v == Ried = TId a3
+    | v == WAC = TId a4
+    | v == Rapid = TId a5
+    | v == RBSbg = TId a6
+    | v == Admira = TId a7
+    | v == Altach = TId a8
+    | v == WrNeustadt = TId a9
+    | v == Groedig = TId a10
     | otherwise = TId Z
 
 --saisonpunkte
 get_punkte_s1 :: Verein -> Nat
 get_punkte_s1 v
-    | v == Sturm = a4
-    | v == Austria = a6
+    | v == Sturm = a4 --1.
+    | v == Austria = a6 --10.
     | v == WAC = a3
     | v == Rapid = a3
     | v == RBSbg = a3
@@ -213,13 +251,13 @@ get_punkte_s1 v
     | v == Altach = a3
     | v == WrNeustadt = a3
     | v == Groedig = a3
-    | v == Ried = a2
+    | v == Ried = a2 --2.
     | otherwise = Z
 
 get_punkte_s2 :: Verein -> Nat
 get_punkte_s2 v
-    | v == Sturm = a3
-    | v == Austria = a4
+    | v == Sturm = a2 --3.
+    | v == Austria = a7 --1.
     | v == WAC = a3
     | v == Rapid = a3
     | v == RBSbg = a3
@@ -227,7 +265,7 @@ get_punkte_s2 v
     | v == Altach = a3
     | v == WrNeustadt = a3
     | v == Groedig = a3
-    | v == Ried = a1
+    | v == Ried = a4 --2.
     | otherwise = Z
 
 get_punkte_s3 :: Verein -> Nat
