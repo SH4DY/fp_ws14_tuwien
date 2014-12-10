@@ -62,12 +62,29 @@ get_pv h = reverse $ sort $ filter (\p -> not(elem p champs)) vices
 --5. Welche Vereine mit diesem Spieler im Kader haben die Spielzeit am häufigstens auf dem letzten Tabellenplatz beendet?
 get_ugr :: Historie -> [SpielerId]
 get_ugr h = reverse $ lasts
-    where lasts = sort $ orderByAppearence $ concat $ map (\v -> concat $ (map (\s -> was_last_season v s) h)) vereine
+    where lasts = sort $ orderByAppearence' $ concat $ map (\v -> concat $ (map (\s -> was_last_season v s) h)) vereine
 
 --6. Welche Trainer haben am häufigsten Vereine am Ende der Saison auf einen Stockerlplatz gefuhrt? 
 get_tsp :: Historie -> [TrainerId]
 get_tsp h = stockerl
-    where stockerl = sort $ orderByAppearenceT $ concat $ map (\v -> filter (\x -> not(x==TId Z)) (map (\s -> was_stockerl_season v s) h)) vereine
+    where stockerl = sort $ orderByAppearence' $ concat $ map (\v -> filter (\x -> not(x==TId Z)) (map (\s -> was_stockerl_season v s) h)) vereine
+
+--7. Welche Trainer haben die meisten Vereine am Ende der Saison in die Abstiegszone auf einen der
+--drei letzten Tabellenpl¨atze gefuhrt? 
+get_taz :: Historie -> [TrainerId]
+get_taz h = az
+    where az = sort $ orderByAppearence' $ concat $ map (\v -> remDup $ filter (\x -> not(x==TId Z)) (map (\s -> was_az_season v s) h)) vereine
+
+--8. Welche Vereine halten fur ihre Trainer einen Schleudersitz bereit und haben bislan ¨ g auf die meisten
+--Trainer vertraut?
+get_vsz :: Historie -> [Verein]
+get_vsz h = sort $ orderByAppearence' $ map (\x -> fst x) $concat $ map (\v -> (remDup $ map (\(p,k,Tr f)-> (v, f v)) h)) vereine
+
+--9. Welche Trainer halten es nie lange aus bei einem Verein und haben in ihrer Karriere die meisten
+--Vereine betreut?
+--get_tmv :: Historie -> [TrainerId]
+get_tmv h = orderByAppearence' $ concat $ map (\v -> (remDup $ map (\(p,k, Tr f) -> f v)h)) vereine
+
 --Helper
 get_meister :: Saison -> Verein
 get_meister (p, k, t) = fst $ last (sortBy (comparing snd) (map (\x -> (x, p x)) vereine)) 
@@ -106,10 +123,14 @@ was_stockerl_season v (p,k,Tr f)
     | ((get_placement (p,k,Tr f) 1) == v) || ((get_placement (p,k,Tr f) 2) == v) || ((get_placement (p,k,Tr f) 3) == v) = f v
     | otherwise = TId Z
 
+was_az_season :: Verein -> Saison -> TrainerId
+was_az_season v (p,k,Tr f)
+    | ((get_placement (p,k,Tr f) 8) == v) || ((get_placement (p,k,Tr f) 9) == v) || ((get_placement (p,k,Tr f) 10) == v) = f v
+    | otherwise = TId Z
 
-remDup = foldl (\seen x -> if x `elem` seen
-                                      then seen
-                                      else seen ++ [x]) []
+remDup :: Eq a => [a] -> [a]
+remDup = foldl (\seen x -> if x `elem` seen then seen else seen ++ [x]) []
+
 orderByAppearence :: [SpielerId] -> [SpielerId]
 orderByAppearence [] = []
 orderByAppearence (a:as) = map (\(x,y) -> y) (takeWhile (\(x,y) -> (fst $ head (frequency (a:as))) == x) (frequency (a:as)))
@@ -117,6 +138,11 @@ orderByAppearence (a:as) = map (\(x,y) -> y) (takeWhile (\(x,y) -> (fst $ head (
 orderByAppearenceT :: [TrainerId] -> [TrainerId]
 orderByAppearenceT [] = []
 orderByAppearenceT (a:as) = map (\(x,y) -> y) (takeWhile (\(x,y) -> (fst $ head (freq)) == x) freq)
+    where freq = frequency (a:as)
+
+orderByAppearence' :: Ord a => [a] -> [a]
+orderByAppearence' [] = []
+orderByAppearence' (a:as) = map (\(x,y) -> y) (takeWhile (\(x,y) -> (fst $ head (freq)) == x) freq)
     where freq = frequency (a:as)
 
 --Häufigkeit des Vorkommens eines Elements (Rückgabe als Tupel), absteigend sortiert
@@ -214,7 +240,7 @@ get_kader2 v
 get_trainer1 :: Verein -> TrainerId
 get_trainer1 v
     | v == Sturm = TId a1
-    | v == Austria = TId a2
+    | v == Austria = TId a1
     | v == Ried = TId a3
     | v == WAC = TId a4
     | v == Rapid = TId a5
@@ -227,7 +253,7 @@ get_trainer1 v
 
 get_trainer2 :: Verein -> TrainerId
 get_trainer2 v
-    | v == Sturm = TId a1
+    | v == Sturm = TId a2
     | v == Austria = TId a2
     | v == Ried = TId a3
     | v == WAC = TId a4
