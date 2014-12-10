@@ -61,7 +61,8 @@ get_pv h = reverse $ sort $ filter (\p -> not(elem p champs)) vices
 
 --5. Welche Vereine mit diesem Spieler im Kader haben die Spielzeit am häufigstens auf dem letzten Tabellenplatz beendet?
 get_ugr :: Historie -> [SpielerId]
-get_ugr x = []
+get_ugr h = reverse $ lasts
+    where lasts = sort $ orderByAppearence $ concat $ map (\v -> concat $ (map (\s -> was_last_season v s) h)) vereine
 
 --6. Welche Trainer haben am h¨aufigsten Vereine am Ende der Saison auf einen Stockerlplatz gefuhrt? 
 
@@ -83,10 +84,21 @@ was_vice_season v (p,Kd f,t)
     | (get_vice (p,Kd f,t)) == v = f v
     | otherwise = []
 
+get_last :: Saison -> Verein
+get_last (p, k, t) = fst $ (last xs)
+    where xs = reverse $ (sortBy (comparing snd) (map (\x -> (x, p x)) vereine)) 
+
+was_last_season :: Verein -> Saison -> [SpielerId]
+was_last_season v (p,Kd f,t)
+    | (get_last (p,Kd f,t)) == v = f v
+    | otherwise = []
+
+
 remDup = foldl (\seen x -> if x `elem` seen
                                       then seen
                                       else seen ++ [x]) []
 orderByAppearence :: [SpielerId] -> [SpielerId]
+orderByAppearence [] = []
 orderByAppearence (a:as) = map (\(x,y) -> y) (takeWhile (\(x,y) -> (fst $ head (frequency (a:as))) == x) (frequency (a:as)))
 
 --Häufigkeit des Vorkommens eines Elements (Rückgabe als Tupel), absteigend sortiert
@@ -140,12 +152,14 @@ a2 = S(S(S(S (S (S ( S( S( S( S Z)))))))))
 a3 = S(S(S (S Z)))
 a4 = S(S(S(S(S(S(S (S (S ( S( S( S( S Z))))))))))))
 a5 = S( S (S Z))
+a6 = S Z
 
 spieler1 = SId a1
 spieler2 = SId a2
 spieler3 = SId a3
 spieler4 = SId a4
 spieler5 = SId a5
+spieler6 = SId a6
 
 trainer1 = Tr (get_trainer1)
 trainer2 = Tr (get_trainer2)
@@ -164,11 +178,15 @@ get_kader1 :: Verein -> [SpielerId]
 get_kader1 v
     | v == Sturm = [spieler1, spieler2]
     | v == Austria = [spieler3, spieler4]
+    | v == Ried = [spieler5, spieler6]
+    | otherwise = []
 
 get_kader2 :: Verein -> [SpielerId]
 get_kader2 v
     | v == Sturm = [spieler1, spieler2]
     | v == Austria = [spieler3]
+    | v == Ried = [spieler5, spieler6, spieler4,spieler3]
+    | otherwise = []
 
 --Return Trainer
 get_trainer1 :: Verein -> TrainerId
@@ -186,14 +204,30 @@ get_trainer2 v
 --saisonpunkte
 get_punkte_s1 :: Verein -> Nat
 get_punkte_s1 v
-    | v == Sturm = a2
-    | v == Austria = a1
+    | v == Sturm = a4
+    | v == Austria = a6
+    | v == WAC = a3
+    | v == Rapid = a3
+    | v == RBSbg = a3
+    | v == Admira = a3
+    | v == Altach = a3
+    | v == WrNeustadt = a3
+    | v == Groedig = a3
+    | v == Ried = a2
     | otherwise = Z
 
 get_punkte_s2 :: Verein -> Nat
 get_punkte_s2 v
-    | v == Sturm = a1
-    | v == Austria = a2
+    | v == Sturm = a3
+    | v == Austria = a4
+    | v == WAC = a3
+    | v == Rapid = a3
+    | v == RBSbg = a3
+    | v == Admira = a3
+    | v == Altach = a3
+    | v == WrNeustadt = a3
+    | v == Groedig = a3
+    | v == Ried = a1
     | otherwise = Z
 
 get_punkte_s3 :: Verein -> Nat
