@@ -1,10 +1,14 @@
+module Aufgabe6 where
+
 --Ramon Lopez
 --Aufgabe 6
+
+
+
 
 import Data.List
 import Data.Ord
 import Numeric
-
 --DEF
 --Defintion der Datentypen
 data Nat = Z | S Nat deriving (Show)
@@ -68,6 +72,7 @@ mkMatrix pm i = M [fill x maxi (intToPosRat (fromIntegral i))|x <- pm]
 		maxi = length $ maximumBy (comparing length)  pm
 
 fill :: [Skalar] -> Int -> Skalar -> [Skalar]
+fill [] _ _ = []
 fill (x:xs) m fuell
     | length (x:xs) >= m = (x:xs)
     | otherwise = fill ((x:xs) ++ [fuell]) m fuell
@@ -103,8 +108,11 @@ toOkto (x:xs)
     | x == '0' = [N] ++ toOkto xs
 toOkto [] = []
 
-posRatToOct :: PosRat -> [OktoZahlen]
-posRatToOct (x,y) = [(toOkto (showOct (natToInt x) "")) ++ (toOkto (showOct (natToInt y) ""))]
+--posRatToOct :: PosRat -> [OktoZahlen]
+--posRatToOct (x,y) = [(toOkto (showOct (natToInt x) "")) ++ (toOkto (showOct (natToInt y) ""))]
+
+posRatToOct :: PosRat -> ([OktoZiffern],[OktoZiffern])
+posRatToOct (x,y) = ((toOkto (showOct (natToInt x) "")), (toOkto (showOct (natToInt y) "")))
 
 natToInt :: Nat -> Int
 natToInt (S x) = natToInt x + 1
@@ -156,7 +164,9 @@ a2 = S(S(S(S (S (S ( S( S( S( S Z)))))))))
 posRat = (a2,a2) --1,5
 posRat2 = (a1, a2) --0,6
 
-proto = [[posRat, posRat],[posRat,posRat,posRat],[posRat]]
+pm2 = toProtoMatrix [ [(0,1),(1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(7,1),(8,1),(9,1),(10,1)] ] -- row vector
+pm3 = toProtoMatrix [ [(0,1)],[(1,1)],[(2,1)],[(3,1)],[(4,1)],[(5,1)],[(6,1)],[(7,1)],[(8,1)],[(9,1)],[(10,1)] ] -- column vector
+pm4 = toProtoMatrix [ [],[(0,1),(1,1),(2,1)],[(3,1)] ]
 
 skalar1 = [[posRat],[posRat],[posRat]]
 skalar2 = [[posRat2],[posRat2],[posRat2]]
