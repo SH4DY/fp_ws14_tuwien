@@ -33,10 +33,11 @@ type Saison = (Punkte, Kader, Trainer)
 
 type Historie = [Saison]
 
+vereine = [Sturm,WAC,Austria,WrNeustadt,RBSbg,Groedig,Rapid,Admira,Ried,Altach]
 
 --1. Welche Spieler sind mit den meisten Vereinen Meister geworden?
 get_spm :: Historie -> [SpielerId]
-get_spm seasons =  sort $ orderByAppearence $ concat $ map (\ve -> remDup $ concat $ (map (\sa -> was_champ_season ve sa) seasons)) vereine
+get_spm seasons =  sort $ orderByAppearence' $ concat $ map (\ve -> remDup $ concat $ (map (\sa -> was_champ_season ve sa) seasons)) vereine
 
 --2. Welche Vereine haben die Saison am häufigsten auf einem Primzahltabellenplatz abgeschlossen
 get_mdhm :: Historie -> [Verein]
@@ -51,7 +52,7 @@ get_mdhi hist = sort $ map (fst) $ takeWhile (\(v,p) -> p >= (snd(head allRanks)
 --4. Welche Spieler sind am häufigsten Vizemeister geworden, ohne je Meister geworden zu sein?
 get_pv :: Historie -> [SpielerId]
 get_pv h = reverse $ sort $ filter (\p -> not(elem p champs)) vices
-	where vices = sort $ orderByAppearence $ concat $ map (\v -> concat $ (map (\s -> was_vice_season v s) h)) vereine
+	where vices = sort $ orderByAppearence' $ concat $ map (\v -> concat $ (map (\s -> was_vice_season v s) h)) vereine
 	      champs = concat $ map (\v -> concat $ (map (\s -> was_champ_season v s) h)) vereine
 --Map über alle Vereine alle saisonen
 --verein x wurde in saison y vizemeister?
@@ -82,7 +83,7 @@ get_vsz h = sort $ orderByAppearence' $ map (\x -> fst x) $concat $ map (\v -> (
 
 --9. Welche Trainer halten es nie lange aus bei einem Verein und haben in ihrer Karriere die meisten
 --Vereine betreut?
---get_tmv :: Historie -> [TrainerId]
+get_tmv :: Historie -> [TrainerId]
 get_tmv h = orderByAppearence' $ concat $ map (\v -> (remDup $ map (\(p,k, Tr f) -> f v)h)) vereine
 
 --Helper
@@ -131,14 +132,7 @@ was_az_season v (p,k,Tr f)
 remDup :: Eq a => [a] -> [a]
 remDup = foldl (\seen x -> if x `elem` seen then seen else seen ++ [x]) []
 
-orderByAppearence :: [SpielerId] -> [SpielerId]
-orderByAppearence [] = []
-orderByAppearence (a:as) = map (\(x,y) -> y) (takeWhile (\(x,y) -> (fst $ head (frequency (a:as))) == x) (frequency (a:as)))
 
-orderByAppearenceT :: [TrainerId] -> [TrainerId]
-orderByAppearenceT [] = []
-orderByAppearenceT (a:as) = map (\(x,y) -> y) (takeWhile (\(x,y) -> (fst $ head (freq)) == x) freq)
-    where freq = frequency (a:as)
 
 orderByAppearence' :: Ord a => [a] -> [a]
 orderByAppearence' [] = []
@@ -189,116 +183,6 @@ remove_player x (y:ys)
     | x == y = remove_player x ys
     | otherwise = y : remove_player x ys
 
---Testdaten
-vereine = [Sturm,WAC,Austria,WrNeustadt,RBSbg,Groedig,Rapid,Admira,Ried,Altach]
-a1 = S (S Z)
-a2 = S(S(S(S (S (S ( S( S( S( S Z)))))))))
-a3 = S(S(S (S Z)))
-a4 = S(S(S(S(S(S(S (S (S ( S( S( S( S Z))))))))))))
-a5 = S( S (S Z))
-a6 = S Z
-a7 = S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S (S (S ( S( S( S( S Z))))))))))))))))))))))))
-a8 = S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S (S (S ( S( S( S( S Z))))))))))))))))))))))))
-a9 = S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S (S (S ( S( S( S( S Z))))))))))))))))))))))))
-a10 = S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S(S (S (S ( S( S( S( S Z))))))))))))))))))))))))
-
-spieler1 = SId a1
-spieler2 = SId a2
-spieler3 = SId a3
-spieler4 = SId a4
-spieler5 = SId a5
-spieler6 = SId a6
-
-trainer1 = Tr (get_trainer1)
-trainer2 = Tr (get_trainer2)
-
-kader1 = Kd (get_kader1)
-kader2 = Kd (get_kader2)
-
-saison_1 = (get_punkte_s1, kader1, trainer1)
-saison_2 = (get_punkte_s2, kader2, trainer2)
-
-historie1 = [saison_1, saison_2]
-historie2 = [saison_2, saison_1]
---Return Kader
-
-get_kader1 :: Verein -> [SpielerId]
-get_kader1 v
-    | v == Sturm = [spieler1, spieler2]
-    | v == Austria = [spieler3, spieler4]
-    | v == Ried = [spieler5, spieler6]
-    | otherwise = []
-
-get_kader2 :: Verein -> [SpielerId]
-get_kader2 v
-    | v == Sturm = [spieler1, spieler2]
-    | v == Austria = [spieler3]
-    | v == Ried = [spieler5, spieler6, spieler4,spieler3]
-    | otherwise = []
-
---Return Trainer
-get_trainer1 :: Verein -> TrainerId
-get_trainer1 v
-    | v == Sturm = TId a1
-    | v == Austria = TId a1
-    | v == Ried = TId a3
-    | v == WAC = TId a4
-    | v == Rapid = TId a5
-    | v == RBSbg = TId a6
-    | v == Admira = TId a7
-    | v == Altach = TId a8
-    | v == WrNeustadt = TId a9
-    | v == Groedig = TId a10
-    | otherwise = TId Z
-
-get_trainer2 :: Verein -> TrainerId
-get_trainer2 v
-    | v == Sturm = TId a2
-    | v == Austria = TId a2
-    | v == Ried = TId a3
-    | v == WAC = TId a4
-    | v == Rapid = TId a5
-    | v == RBSbg = TId a6
-    | v == Admira = TId a7
-    | v == Altach = TId a8
-    | v == WrNeustadt = TId a9
-    | v == Groedig = TId a10
-    | otherwise = TId Z
-
---saisonpunkte
-get_punkte_s1 :: Verein -> Nat
-get_punkte_s1 v
-    | v == Sturm = a4 --1.
-    | v == Austria = a6 --10.
-    | v == WAC = a3
-    | v == Rapid = a3
-    | v == RBSbg = a3
-    | v == Admira = a3
-    | v == Altach = a3
-    | v == WrNeustadt = a3
-    | v == Groedig = a3
-    | v == Ried = a2 --2.
-    | otherwise = Z
-
-get_punkte_s2 :: Verein -> Nat
-get_punkte_s2 v
-    | v == Sturm = a2 --3.
-    | v == Austria = a7 --1.
-    | v == WAC = a3
-    | v == Rapid = a3
-    | v == RBSbg = a3
-    | v == Admira = a3
-    | v == Altach = a3
-    | v == WrNeustadt = a3
-    | v == Groedig = a3
-    | v == Ried = a4 --2.
-    | otherwise = Z
-
-get_punkte_s3 :: Verein -> Nat
-get_punkte_s3 v
-    | v == Sturm = a2
-    | v == Austria = a1
-    | otherwise = Z
 
 --Defintion der Datentypen
 data Nat = Z | S Nat deriving (Show)
