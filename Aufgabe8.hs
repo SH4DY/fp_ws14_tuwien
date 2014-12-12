@@ -46,7 +46,7 @@ st1 = St (spiel1, spiel2, spiel3, spiel4, spiel5)
 st2 = St (spiel6, spiel7, spiel8, spiel9, spiel10)
 st3 = St (spiel11, spiel12, spiel13, spiel14, spiel15)
 
-rp = Rp st1 st2 st3 -- INVALID!!!!
+rp = Rp st1 st2 st3
 
 budget_v :: Verein -> Nat
 budget_v v
@@ -117,8 +117,37 @@ listVereineOfSpieltag (St (sp1, sp2, sp3, sp4, sp5)) =  ([fst sp1, snd sp1] ++ [
 listVereineOfSpieltagPair :: Spieltag -> [Spiel]
 listVereineOfSpieltagPair (St (sp1, sp2, sp3, sp4, sp5)) = [sp1,sp2,sp3,sp4,sp5]
 
+--2 Punktestand gemäss Punkte und Budget
+--Budget checken -> Panikmodus Fehlermeldung "Ungueltige Eingabe"
 
+mkTabelle :: Punkte -> Budget -> [Verein]
+mkTabelle p b
+    | isValidBudget b =  reverse $ map (\(Tm(verein, pkt, bud)) -> verein) $ sort $ map (\x -> (Tm (x, (p x), (b x)))) vereine 
+--map (\(verein, pkt, bud) -> verein) $
+data Team = Tm (Verein, Punktezahl, Budgethoehe) deriving Show
+type Punktezahl = Nat
+type Budgethoehe = Nat
 
+instance Eq Team where
+ (==) (Tm (v1, p1, b1)) (Tm (v2, p2, b2)) = if(p1 == p2) then (b1 == b2) else (p1 == p2)
 
+instance Ord Team where
+ (<) (Tm (v1, p1, b1)) (Tm (v2, p2, b2)) = if(p1 == p2) then (b1 > b2) else (p1 < p2)
+ compare (Tm (v1, p1, b1)) (Tm (v2, p2, b2))= if (p1 == p2) then (compare b2 b1) else (compare p1 p2)
 
+team1 = Tm (Sturm, a1, a1)
+team2 = Tm (Rapid, a2, a2)
+team3 = Tm (Altach, a3, a3)
 
+get_pkt1 :: Verein -> Nat
+get_pkt1 v
+    | v==Sturm = a10
+    | v==WAC = a2
+    | v==Austria = a3
+    | v==WrNeustadt = a4
+    | v==RBSbg = a5
+    | v==Groedig = a6
+    | v==Rapid = a7
+    | v==Admira = a8
+    | v==Ried = a9
+    | v==Altach = a10
