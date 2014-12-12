@@ -120,10 +120,25 @@ listVereineOfSpieltagPair (St (sp1, sp2, sp3, sp4, sp5)) = [sp1,sp2,sp3,sp4,sp5]
 --2 Punktestand gemäss Punkte und Budget
 --Budget checken -> Panikmodus Fehlermeldung "Ungueltige Eingabe"
 
-mkTabelle :: Punkte -> Budget -> [Verein]
+mkTabelle :: Punkte -> Budget -> [Verein] --PANIKMODUS IMPLEMENTIEREN
 mkTabelle p b
-    | isValidBudget b =  reverse $ map (\(Tm(verein, pkt, bud)) -> verein) $ sort $ map (\x -> (Tm (x, (p x), (b x)))) vereine 
---map (\(verein, pkt, bud) -> verein) $
+    | not(isValidBudget b) = error "Ungueltige Eingabe" 
+    | otherwise =  reverse $ map (\(Tm(verein, pkt, bud)) -> verein) $ sort $ map (\x -> (Tm (x, (p x), (b x)))) vereine
+
+--3 Herbstmeister
+
+hm_fix :: Punkte -> Budget -> Restprogramm -> Herbstmeister
+hm_fix p b (Rp stag1 stag2 stag3)
+    | not(isValidBudget b) || not(isValidRestprogramm (Rp stag1 stag2 stag3)) = error "Ungueltige Eingabe"
+    | otherwise = if( (head $ leaderboard p b) > ((addWinToTeam((leaderboard p b) !! 1)))) then (AlsHMstehtfest ((\ (Tm(vr,pkt,bud)) -> vr) (head $ leaderboard p b))) else NochOffen
+    
+
+leaderboard :: Punkte -> Budget -> [Team]
+leaderboard p b = reverse $ sort $ map (\x -> (Tm (x, (p x), (b x)))) vereine
+
+addWinToTeam :: Team ->Team
+addWinToTeam (Tm (v,p,b)) = (Tm (v,p + (S (S (S Z))),b))
+
 data Team = Tm (Verein, Punktezahl, Budgethoehe) deriving Show
 type Punktezahl = Nat
 type Budgethoehe = Nat
@@ -151,3 +166,22 @@ get_pkt1 v
     | v==Admira = a8
     | v==Ried = a9
     | v==Altach = a10
+
+instance Num Nat where
+ (+) Z x         = x
+ (+) x Z         = x
+ (+) (S x) (S y) = S (S ((+) x y))
+ (-) Z _         = Z
+ (-) x Z         = x
+ (-) (S x) (S y) = (-) x y
+ (*) Z _         = Z
+ (*) _ Z         = Z
+ (*) (S x) (S y) = (S x) + ((S x) * y)
+ abs x           = x
+ negate _        = Z
+ signum x
+  | x == Z       = Z
+  | otherwise    = (S Z)
+ fromInteger x
+  | x <= 0       = Z
+  | otherwise    = sum (replicate (fromIntegral x) (S Z))
