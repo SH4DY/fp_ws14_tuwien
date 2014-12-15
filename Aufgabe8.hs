@@ -1,4 +1,6 @@
 import Data.List
+import Data.Ord
+
 
 data Verein = Sturm | WAC | Austria | WrNeustadt | RBSbg| Groedig | Rapid | Admira | Ried | Altach deriving (Eq,Ord,Show)
 
@@ -119,8 +121,7 @@ listVereineOfSpieltagPair (St (sp1, sp2, sp3, sp4, sp5)) = [sp1,sp2,sp3,sp4,sp5]
 
 --2 Punktestand gemäss Punkte und Budget
 --Budget checken -> Panikmodus Fehlermeldung "Ungueltige Eingabe"
-
-mkTabelle :: Punkte -> Budget -> [Verein] --PANIKMODUS IMPLEMENTIEREN
+mkTabelle :: Punkte -> Budget -> [Verein]
 mkTabelle p b
     | not(isValidBudget b) = error "Ungueltige Eingabe" 
     | otherwise =  reverse $ map (\(Tm(verein, pkt, bud)) -> verein) $ sort $ map (\x -> (Tm (x, (p x), (b x)))) vereine
@@ -130,14 +131,24 @@ mkTabelle p b
 hm_fix :: Punkte -> Budget -> Restprogramm -> Herbstmeister
 hm_fix p b (Rp stag1 stag2 stag3)
     | not(isValidBudget b) || not(isValidRestprogramm (Rp stag1 stag2 stag3)) = error "Ungueltige Eingabe"
-    | otherwise = if( (head $ leaderboard p b) > ((addWinToTeam((leaderboard p b) !! 1)))) then (AlsHMstehtfest ((\ (Tm(vr,pkt,bud)) -> vr) (head $ leaderboard p b))) else NochOffen
-    
+    | (head $ leaderboard p b) > ((addWinsToTeam((leaderboard p b) !! 1))) = AlsHMstehtfest ((\ (Tm(vr,pkt,bud)) -> vr) (head $ leaderboard p b))
+    | otherwise = NochOffen
+
+hm_ausEigenerKraft :: Punkte -> Budget -> Restprogramm -> [Verein]
+hm_ausEigenerKraft p b (Rp stag1 stag2 stag3)
+    | not(isValidBudget b) || not(isValidRestprogramm (Rp stag1 stag2 stag3)) = error "Ungueltige Eingabe"
+    | otherwise = map (\(vr, nat) -> vr) $ sortBy (comparing snd) $ map (\(vr, bl) -> (vr, (b vr))) $ filter (\(vr, bl) -> bl == True) $ map (\v -> (v, (potentialLeader (Tm (v, p v, b v)) p b) )) vereine
 
 leaderboard :: Punkte -> Budget -> [Team]
 leaderboard p b = reverse $ sort $ map (\x -> (Tm (x, (p x), (b x)))) vereine
 
-addWinToTeam :: Team ->Team
-addWinToTeam (Tm (v,p,b)) = (Tm (v,p + (S (S (S Z))),b))
+addWinsToTeam :: Team -> Team
+addWinsToTeam (Tm (v,p,b)) = (Tm (v,p + fromInteger(9),b))
+
+potentialLeader :: Team -> Punkte -> Budget-> Bool 
+potentialLeader (Tm(v,p,b)) pf bf
+    | (head $ leaderboard pf bf) == (Tm(v,p,b)) = True 
+    | otherwise = if ((addWinsToTeam (Tm(v, p,b))) > (head $ leaderboard pf bf)) then True else False
 
 data Team = Tm (Verein, Punktezahl, Budgethoehe) deriving Show
 type Punktezahl = Nat
@@ -160,7 +171,7 @@ get_pkt1 v
     | v==WAC = a2
     | v==Austria = a3
     | v==WrNeustadt = a4
-    | v==RBSbg = a5
+    | v==RBSbg = a1
     | v==Groedig = a6
     | v==Rapid = a7
     | v==Admira = a8
