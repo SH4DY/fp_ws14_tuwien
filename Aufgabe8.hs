@@ -1,6 +1,8 @@
+module Aufgabe8 where
+
+
 import Data.List
 import Data.Ord
-
 
 data Verein = Sturm | WAC | Austria | WrNeustadt | RBSbg| Groedig | Rapid | Admira | Ried | Altach deriving (Eq,Ord,Show)
 
@@ -24,73 +26,14 @@ data Herbstmeister = NochOffen | AlsHMstehtfest Verein deriving (Eq, Show)
 vereine = [Sturm, WAC, Austria, WrNeustadt, RBSbg, Groedig, Rapid, Admira, Ried, Altach]
 --Testdaten
 
-spiel1 = (Sturm, WAC)
-spiel2 = (Austria, WrNeustadt)
-spiel3 = (RBSbg, Groedig)
-spiel4 = (Rapid, Admira)
-spiel5 = (Ried, Altach)
 
-spiel6 = (Sturm, Austria)
-spiel7 = (RBSbg, Rapid)
-spiel8 = (Ried, WAC)
-spiel9 = (WrNeustadt, Groedig)
-spiel10 = (Admira, Altach)
 
-spiel11 = (WAC, Sturm)
-spiel12 = (WrNeustadt, Austria)
-spiel13 = (Groedig, RBSbg)
-spiel14 = (Admira, Rapid)
-spiel15 = (Altach, Ried)
-
-spiel16 = (Ried, Altach)
-
-st1 = St (spiel1, spiel2, spiel3, spiel4, spiel5)
-st2 = St (spiel6, spiel7, spiel8, spiel9, spiel10)
-st3 = St (spiel11, spiel12, spiel13, spiel14, spiel15)
-
-rp = Rp st1 st2 st3
-
-budget_v :: Verein -> Nat
-budget_v v
-    | v==Sturm = a1
-    | v==WAC = a2
-    | v==Austria = a3
-    | v==WrNeustadt = a4
-    | v==RBSbg = a5
-    | v==Groedig = a6
-    | v==Rapid = a7
-    | v==Admira = a8
-    | v==Ried = a9
-    | v==Altach = a10
-
-budget_nv :: Verein -> Nat
-budget_nv v
-    | v==Sturm = a1
-    | v==WAC = a2
-    | v==Austria = a3
-    | v==WrNeustadt = a2
-    | v==RBSbg = a5
-    | v==Groedig = a6
-    | v==Rapid = a7
-    | v==Admira = a8
-    | v==Ried = a9
-    | v==Altach = a10
-
-a1 = (S Z)
-a2 = (S (S Z))
-a3 = (S (S (S Z)))
-a4 = (S (S (S (S Z))))
-a5 = (S (S (S (S (S Z)))))
-a6 = (S (S (S (S (S (S Z))))))
-a7 = (S (S (S (S (S (S (S (S Z))))))))
-a8 = (S (S (S (S (S (S (S (S (S Z)))))))))
-a9 = (S (S (S (S (S (S (S (S (S (S Z))))))))))
-a10 =(S (S (S (S (S (S (S (S (S (S (S Z)))))))))))
 --1. Warheitsfunktionen
 
 isValidBudget :: Budget -> Bool
 isValidBudget b = (budgetsAreDefined b )&& (budgetsAreDiff b)
 
+--"...können davon ausgehen, dass alle Budgets definiert sind."
 budgetsAreDefined b = True
 
 budgetsAreDiff :: Budget -> Bool
@@ -134,10 +77,20 @@ hm_fix p b (Rp stag1 stag2 stag3)
     | (head $ leaderboard p b) > ((addWinsToTeam((leaderboard p b) !! 1))) = AlsHMstehtfest ((\ (Tm(vr,pkt,bud)) -> vr) (head $ leaderboard p b))
     | otherwise = NochOffen
 
+hm_alleMitRechnerischerChance :: Punkte -> Budget -> Restprogramm -> [Verein]
+hm_alleMitRechnerischerChance p b (Rp stag1 stag2 stag3)
+    | not(isValidBudget b) || not(isValidRestprogramm (Rp stag1 stag2 stag3)) = error "Ungueltige Eingabe"
+    | otherwise = map (\(vr, nat) -> vr) $ sortBy (comparing snd) $ map (\(vr, bl) -> (vr, (b vr))) $ filter (\(vr, bl) -> bl == True) $ map (\v -> (v, (potentialLeader (Tm (v, p v, b v)) p b) )) vereine
+
+vhm_alleMitRechnerischerChance :: Punkte -> Budget -> Restprogramm -> [Verein]
+vhm_alleMitRechnerischerChance p b (Rp stag1 stag2 stag3)
+    | not(isValidBudget b) || not(isValidRestprogramm (Rp stag1 stag2 stag3)) = error "Ungueltige Eingabe"
+    | otherwise = map (\(vr, nat) -> vr) $ sortBy (comparing snd) $ map (\(vr, bl) -> (vr, (b vr))) $ filter (\(vr, bl) -> bl == True) $ map (\v -> (v, (potentialLeader (Tm (v, p v, b v)) p b) )) vereine
+
 hm_ausEigenerKraft :: Punkte -> Budget -> Restprogramm -> [Verein]
 hm_ausEigenerKraft p b (Rp stag1 stag2 stag3)
     | not(isValidBudget b) || not(isValidRestprogramm (Rp stag1 stag2 stag3)) = error "Ungueltige Eingabe"
-    | otherwise = map (\(vr, nat) -> vr) $ sortBy (comparing snd) $ map (\(vr, bl) -> (vr, (b vr))) $ filter (\(vr, bl) -> bl == True) $ map (\v -> (v, (potentialLeader (Tm (v, p v, b v)) p b) )) vereine
+    | otherwise= [((mkTabelle p b) !! 0)]
 
 leaderboard :: Punkte -> Budget -> [Team]
 leaderboard p b = reverse $ sort $ map (\x -> (Tm (x, (p x), (b x)))) vereine
@@ -150,6 +103,12 @@ potentialLeader (Tm(v,p,b)) pf bf
     | (head $ leaderboard pf bf) == (Tm(v,p,b)) = True 
     | otherwise = if ((addWinsToTeam (Tm(v, p,b))) > (head $ leaderboard pf bf)) then True else False
 
+potentialViceLeader :: Team -> Punkte -> Budget-> Bool 
+potentialViceLeader (Tm(v,p,b)) pf bf
+    | ((head $ leaderboard pf bf) == (Tm(v,p,b))) || (((leaderboard pf bf) !! 1) == (Tm(v,p,b)))  = True 
+    | otherwise = if ((addWinsToTeam (Tm(v, p,b))) > (leaderboard pf bf) !! 1 ) then True else False
+
+
 data Team = Tm (Verein, Punktezahl, Budgethoehe) deriving Show
 type Punktezahl = Nat
 type Budgethoehe = Nat
@@ -161,22 +120,6 @@ instance Ord Team where
  (<) (Tm (v1, p1, b1)) (Tm (v2, p2, b2)) = if(p1 == p2) then (b1 > b2) else (p1 < p2)
  compare (Tm (v1, p1, b1)) (Tm (v2, p2, b2))= if (p1 == p2) then (compare b2 b1) else (compare p1 p2)
 
-team1 = Tm (Sturm, a1, a1)
-team2 = Tm (Rapid, a2, a2)
-team3 = Tm (Altach, a3, a3)
-
-get_pkt1 :: Verein -> Nat
-get_pkt1 v
-    | v==Sturm = a10
-    | v==WAC = a2
-    | v==Austria = a3
-    | v==WrNeustadt = a4
-    | v==RBSbg = a1
-    | v==Groedig = a6
-    | v==Rapid = a7
-    | v==Admira = a8
-    | v==Ried = a9
-    | v==Altach = a10
 
 instance Num Nat where
  (+) Z x         = x
