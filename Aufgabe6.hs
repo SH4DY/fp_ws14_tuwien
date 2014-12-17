@@ -1,11 +1,5 @@
-module Aufgabe6 where
-
 --Ramon Lopez
 --Aufgabe 6
-
-
-
-
 import Data.List
 import Data.Ord
 import Numeric
@@ -62,20 +56,18 @@ type ProtoMatrix = [[Skalar]]
 newtype Matrix = M [[Skalar]]
 type Fuellwert = Integer
 
-
-
 --Aufgabe 6.1
 --Auffüllen der Matrix mittels Listdurchgang
-mkMatrix :: ProtoMatrix -> Fuellwert -> Matrix
-mkMatrix pm i = M [fill x maxi (intToPosRat (fromIntegral i))|x <- pm]
-	where
-		maxi = length $ maximumBy (comparing length)  pm
+mkMatrix:: ProtoMatrix -> Fuellwert -> Matrix
+mkMatrix pm i = M [(fillUp ls q i)|ls <- pm]
+    where p = length pm
+          q = if ((length $ maximumBy (comparing length)  pm) > 0) then length (maximumBy (comparing length) pm) else 1
 
-fill :: [Skalar] -> Int -> Skalar -> [Skalar]
-fill [] _ _ = []
-fill (x:xs) m fuell
-    | length (x:xs) >= m = (x:xs)
-    | otherwise = fill ((x:xs) ++ [fuell]) m fuell
+--Negative Füllwerte werden in positive konvertiert!
+fillUp :: [Skalar] -> Int -> Fuellwert -> [Skalar]
+fillUp skl q f
+    | (length skl) >= q = skl
+    | otherwise = fillUp (skl ++ [intToPosRat $ abs(fromIntegral f)]) q f
 
 intToPosRat :: Int -> PosRat
 intToPosRat x 
@@ -123,7 +115,7 @@ natToInt Z = 0
 --Vergleich der Dimensionen ausgelagert, dann Vergleich mittels überladenen Operatoren
 instance Eq Matrix where
     (==) (M m1) (M m2) = (length m1) == (length m2) && (all (\x -> length x == dim) m1) && (all (\x -> length x == dim) m2) && (all (\(x,y) -> x==y)(zip m1 m2))
-	    where dim = (length (m1 !! 1))
+	    where dim = if ((length m1) < 1) then 0 else (length (m1 !! 0))
 
 --Aufgabe4
 data OrderingMat = EQM | LTM | GTM | INC deriving (Eq, Show)
@@ -133,10 +125,10 @@ class (Eq a) => OrdMat a where
     cmpm :: a -> a -> OrderingMat
 
 instance OrdMat Matrix where
-    lsm (M m1) (M m2) = (compareDim (M m1) (M m2)) && (all (\(x,y) -> x < y)(zip m1 m2))
-    lem (M m1) (M m2) = (compareDim (M m1) (M m2)) && (all (\(x,y) -> x <= y)(zip m1 m2))
-    grm (M m1) (M m2) = (compareDim (M m1) (M m2)) && (all (\(x,y) -> x > y)(zip m1 m2))
-    gem (M m1) (M m2) = (compareDim (M m1) (M m2)) && (all (\(x,y) -> x >= y)(zip m1 m2))
+    lsm (M m1) (M m2) = (compareDim (M m1) (M m2)) && (all (\(x,y) -> x < y)(zip (concat m1) (concat m2)))
+    lem (M m1) (M m2) = (compareDim (M m1) (M m2)) && (all (\(x,y) -> x <= y)(zip (concat m1) (concat m2)))
+    grm (M m1) (M m2) = (compareDim (M m1) (M m2)) && (all (\(x,y) -> x > y)(zip (concat m1) (concat m2)))
+    gem (M m1) (M m2) = (compareDim (M m1) (M m2)) && (all (\(x,y) -> x >= y)(zip (concat m1) (concat m2)))
     cmpm x y
         | x == y = EQM
         | lsm x y = LTM
@@ -145,7 +137,7 @@ instance OrdMat Matrix where
 
 compareDim :: Matrix -> Matrix -> Bool
 compareDim (M m1) (M m2) = (length m1) == (length m2) && (all (\x -> length x == dim) m1) && (all (\x -> length x == dim) m2)
-    where dim = (length (m1 !! 1))
+    where dim = if ((length m1) < 1) then 0 else (length (m1 !! 0))
 
 --Aufgabe5
 class (Eq a) => ArithMat a where
@@ -158,18 +150,3 @@ instance ArithMat Matrix where
 	multm (M m1)(M m2) = M [[(Z,Z)]]
 
 
---Testdaten
-a1 = S (S Z)
-a2 = S(S(S(S (S (S ( S( S( S( S Z)))))))))
-posRat = (a2,a2) --1,5
-posRat2 = (a1, a2) --0,6
-
-pm2 = toProtoMatrix [ [(0,1),(1,1),(2,1),(3,1),(4,1),(5,1),(6,1),(7,1),(8,1),(9,1),(10,1)] ] -- row vector
-pm3 = toProtoMatrix [ [(0,1)],[(1,1)],[(2,1)],[(3,1)],[(4,1)],[(5,1)],[(6,1)],[(7,1)],[(8,1)],[(9,1)],[(10,1)] ] -- column vector
-pm4 = toProtoMatrix [ [],[(0,1),(1,1),(2,1)],[(3,1)] ]
-
-skalar1 = [[posRat],[posRat],[posRat]]
-skalar2 = [[posRat2],[posRat2],[posRat2]]
-
-mat1 = M [[posRat, posRat],[posRat,posRat],[posRat, posRat]]
-mat2 = M [[posRat2, posRat2],[posRat2,posRat2],[posRat2, posRat2]]
